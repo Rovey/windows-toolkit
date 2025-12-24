@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WindowsToolkit.Core\WindowsToolkit.Core.csproj" />
+    <ProjectReference Include="..\WindowsToolkit.Infrastructure\WindowsToolkit.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

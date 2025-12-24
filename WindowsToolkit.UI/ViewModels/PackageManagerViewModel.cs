@@ -1,8 +1,14 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows;
 using WindowsToolkit.UI.Helpers;
 using WindowsToolkit.UI.Models;
+using WindowsToolkit.Core.Interfaces;
+using WindowsToolkit.UI.Services;
 
 namespace WindowsToolkit.UI.ViewModels
 {
@@ -11,21 +17,26 @@ namespace WindowsToolkit.UI.ViewModels
     /// </summary>
     public class PackageManagerViewModel : ViewModelBase
     {
+        private readonly IPackageManagerService _packageManagerService;
         private string _searchText = string.Empty;
         private bool _isInstalling = false;
         private string _statusMessage = "Ready";
         private int _installProgress = 0;
+        private List<PackageItem> _allPackages = new();
 
         public PackageManagerViewModel()
         {
+            // Get service from locator
+            _packageManagerService = ServiceLocator.Instance.PackageManagerService;
+
             // Initialize commands
-            InstallSelectedCommand = new RelayCommand(InstallSelected, CanInstallSelected);
-            InstallAllCommand = new RelayCommand(InstallAll, CanInstallAll);
-            RefreshPackagesCommand = new RelayCommand(RefreshPackages);
+            InstallSelectedCommand = new RelayCommand(async () => await InstallSelectedAsync(), CanInstallSelected);
+            InstallAllCommand = new RelayCommand(async () => await InstallAllAsync(), CanInstallAll);
+            RefreshPackagesCommand = new RelayCommand(async () => await RefreshPackagesAsync());
             SearchCommand = new RelayCommand(Search);
 
-            // Load packages
-            LoadPackages();
+            // Load packages - fire and forget pattern for constructor
+            _ = LoadPackagesAsync();
         }
 
         /// <summary>
@@ -81,92 +92,117 @@ namespace WindowsToolkit.UI.ViewModels
         public ICommand RefreshPackagesCommand { get; }
         public ICommand SearchCommand { get; }
 
-        private void LoadPackages()
+        private async Task LoadPackagesAsync()
         {
-            // TODO: Load packages from service
-            // For now, add some demo packages
-            Packages.Clear();
-
-            Packages.Add(new PackageItem
+            try
             {
-                Id = "Google.Chrome",
-                Name = "Google Chrome",
-                Description = "Fast, secure web browser from Google",
-                IsInstalled = false,
-                IsSelected = true,
-                Category = "Browsers"
-            });
+                StatusMessage = "Loading packages...";
 
-            Packages.Add(new PackageItem
-            {
-                Id = "Mozilla.Firefox",
-                Name = "Mozilla Firefox",
-                Description = "Free and open-source web browser",
-                IsInstalled = false,
-                IsSelected = true,
-                Category = "Browsers"
-            });
+                var packages = await _packageManagerService.GetAvailablePackagesAsync();
+                _allPackages = packages.Select(ModelMapper.ToPackageItem).ToList();
 
-            Packages.Add(new PackageItem
-            {
-                Id = "Microsoft.VisualStudioCode",
-                Name = "Visual Studio Code",
-                Description = "Lightweight but powerful source code editor",
-                IsInstalled = false,
-                IsSelected = true,
-                Category = "Development"
-            });
+                // Apply current search filter
+                ApplyFilter();
 
-            Packages.Add(new PackageItem
+                StatusMessage = $"Loaded {_allPackages.Count} packages";
+            }
+            catch (Exception ex)
             {
-                Id = "Git.Git",
-                Name = "Git",
-                Description = "Distributed version control system",
-                IsInstalled = false,
-                IsSelected = true,
-                Category = "Development"
-            });
-
-            Packages.Add(new PackageItem
-            {
-                Id = "VideoLAN.VLC",
-                Name = "VLC Media Player",
-                Description = "Free and open source cross-platform multimedia player",
-                IsInstalled = false,
-                IsSelected = true,
-                Category = "Media"
-            });
-
-            Packages.Add(new PackageItem
-            {
-                Id = "7zip.7zip",
-                Name = "7-Zip",
-                Description = "File archiver with a high compression ratio",
-                IsInstalled = false,
-                IsSelected = false,
-                Category = "Utilities"
-            });
-
-            Packages.Add(new PackageItem
-            {
-                Id = "Notepad++.Notepad++",
-                Name = "Notepad++",
-                Description = "Free source code editor and Notepad replacement",
-                IsInstalled = false,
-                IsSelected = false,
-                Category = "Utilities"
-            });
+                StatusMessage = $"Error loading packages: {ex.Message}";
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"Failed to load packages: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
         }
 
-        private void InstallSelected()
+        private async Task InstallSelectedAsync()
         {
-            // TODO: Implement installation logic with PackageManagerService
-            StatusMessage = "Installing selected packages...";
-            IsInstalling = true;
+            var selectedPackages = Packages.Where(p => p.IsSelected && !p.IsInstalled).ToList();
 
-            // Placeholder - will be replaced with actual service call
-            StatusMessage = "Installation complete!";
-            IsInstalling = false;
+            if (!selectedPackages.Any())
+            {
+                StatusMessage = "No packages selected";
+                return;
+            }
+
+            try
+            {
+                IsInstalling = true;
+                InstallProgress = 0;
+
+                var packageIds = selectedPackages.Select(p => p.Id).ToList();
+                var totalPackages = packageIds.Count;
+                var completedPackages = 0;
+
+                // Create progress reporter
+                var progress = new Progress<string>(message =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        StatusMessage = message;
+                    });
+                });
+
+                var results = await _packageManagerService.InstallPackagesAsync(packageIds, progress);
+
+                // Process results
+                foreach (var result in results)
+                {
+                    completedPackages++;
+                    InstallProgress = (int)((double)completedPackages / totalPackages * 100);
+
+                    var packageItem = selectedPackages.FirstOrDefault(p => p.Id == result.PackageId);
+                    if (packageItem != null)
+                    {
+                        if (result.Success)
+                        {
+                            packageItem.IsInstalled = true;
+                            packageItem.IsSelected = false;
+                        }
+                        else
+                        {
+                            packageItem.InstallationStatus = "Failed";
+                        }
+                    }
+                }
+
+                var successCount = results.Count(r => r.Success);
+                var failCount = results.Count(r => !r.Success);
+
+                if (failCount > 0)
+                {
+                    StatusMessage = $"Installation complete: {successCount} succeeded, {failCount} failed";
+                    var failedPackages = string.Join("\n",
+                        results.Where(r => !r.Success)
+                               .Select(r => $"- {r.PackageId}: {r.ErrorMessage}"));
+
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show($"Some installations failed:\n\n{failedPackages}",
+                            "Installation Results", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    });
+                }
+                else
+                {
+                    StatusMessage = $"Successfully installed {successCount} package(s)";
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Installation error: {ex.Message}";
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"Installation failed: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
+            finally
+            {
+                IsInstalling = false;
+                InstallProgress = 0;
+            }
         }
 
         private bool CanInstallSelected()
@@ -174,14 +210,13 @@ namespace WindowsToolkit.UI.ViewModels
             return !IsInstalling && Packages.Any(p => p.IsSelected && !p.IsInstalled);
         }
 
-        private void InstallAll()
+        private async Task InstallAllAsync()
         {
-            // Select all uninstalled packages
             foreach (var package in Packages.Where(p => !p.IsInstalled))
             {
                 package.IsSelected = true;
             }
-            InstallSelected();
+            await InstallSelectedAsync();
         }
 
         private bool CanInstallAll()
@@ -189,16 +224,31 @@ namespace WindowsToolkit.UI.ViewModels
             return !IsInstalling && Packages.Any(p => !p.IsInstalled);
         }
 
-        private void RefreshPackages()
+        private async Task RefreshPackagesAsync()
         {
-            LoadPackages();
-            StatusMessage = "Package list refreshed";
+            await LoadPackagesAsync();
         }
 
         private void Search()
         {
-            // TODO: Implement search/filter logic
-            // For now, this is just a placeholder
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            Packages.Clear();
+
+            var filtered = string.IsNullOrWhiteSpace(_searchText)
+                ? _allPackages
+                : _allPackages.Where(p =>
+                    p.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                    p.Description.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                    p.Category.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+
+            foreach (var package in filtered)
+            {
+                Packages.Add(package);
+            }
         }
     }
 }
