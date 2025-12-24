@@ -1,0 +1,107 @@
+﻿<Window x:Class="WindowsToolkit.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WindowsToolkit.UI"
+        xmlns:vm="clr-namespace:WindowsToolkit.UI.ViewModels"
+        mc:Ignorable="d"
+        Title="Windows Toolkit" Height="700" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar Navigation -->
+        <Border Grid.Column="0" Background="#2C3E50" Padding="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- App Title -->
+                <Border Grid.Row="0" Background="#1A252F" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="Windows Toolkit"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="v0.1.0"
+                                   FontSize="12"
+                                   Foreground="#95A5A6"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Navigation Menu -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,20,0,0">
+                        <Button Content="📦 Package Manager"
+                                Style="{StaticResource NavigationButtonStyle}"
+                                Command="{Binding NavigateToPackageManagerCommand}"/>
+                        <Button Content="⚙️ Config Sync"
+                                Style="{StaticResource NavigationButtonStyle}"
+                                Command="{Binding NavigateToConfigSyncCommand}"/>
+                        <Button Content="🎨 Media Converter"
+                                Style="{StaticResource NavigationButtonStyle}"
+                                Command="{Binding NavigateToMediaConverterCommand}"/>
+                        <Button Content="🎬 Video Tools"
+                                Style="{StaticResource NavigationButtonStyle}"
+                                Command="{Binding NavigateToVideoToolsCommand}"/>
+                        <Button Content="🔧 Utilities"
+                                Style="{StaticResource NavigationButtonStyle}"
+                                Command="{Binding NavigateToUtilitiesCommand}"/>
+                        <Button Content="ℹ️ About"
+                                Style="{StaticResource NavigationButtonStyle}"
+                                Command="{Binding NavigateToAboutCommand}"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Footer -->
+                <Border Grid.Row="2" Background="#1A252F" Padding="20,15">
+                    <TextBlock Text="© 2025"
+                               Foreground="#95A5A6"
+                               FontSize="11"
+                               HorizontalAlignment="Center"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Content Area -->
+        <Border Grid.Column="1" Background="White" CornerRadius="10,0,0,0" Margin="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Border Grid.Row="0" Background="White" Padding="30,20" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <TextBlock Text="{Binding CurrentPageTitle}"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"
+                                   Foreground="#2C3E50"/>
+                    </Grid>
+                </Border>
+
+                <!-- Content -->
+                <ContentControl Grid.Row="1"
+                                Content="{Binding CurrentView}"
+                                Margin="30"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
