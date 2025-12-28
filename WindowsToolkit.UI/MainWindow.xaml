@@ -51,6 +51,9 @@
                         <Button Content="📦 Package Manager"
                                 Style="{StaticResource NavigationButtonStyle}"
                                 Command="{Binding NavigateToPackageManagerCommand}"/>
+                        <Button Content="🗑️ Downloads Cleanup"
+                                Style="{StaticResource NavigationButtonStyle}"
+                                Command="{Binding NavigateToDownloadsCleanupCommand}"/>
                         <Button Content="⚙️ Config Sync"
                                 Style="{StaticResource NavigationButtonStyle}"
                                 Command="{Binding NavigateToConfigSyncCommand}"/>

@@ -1,3 +1,4 @@
+using System;
 using WindowsToolkit.Core.Models;
 using WindowsToolkit.UI.Models;
 
@@ -40,6 +41,42 @@ namespace WindowsToolkit.UI.Helpers
                 Version = packageItem.Version,
                 Publisher = packageItem.Publisher,
                 IsInstalled = packageItem.IsInstalled
+            };
+        }
+
+        /// <summary>
+        /// Converts a Core DownloadFile to a UI DownloadFileItem
+        /// </summary>
+        public static DownloadFileItem ToDownloadFileItem(DownloadFile file)
+        {
+            return new DownloadFileItem
+            {
+                FilePath = file.FilePath,
+                FileName = file.FileName,
+                Extension = file.Extension,
+                SizeInBytes = file.SizeInBytes,
+                ModifiedDate = file.ModifiedDate,
+                Category = file.Category.ToString(),
+                DaysSinceModified = file.DaysSinceModified,
+                IsSelected = true // Default selected
+            };
+        }
+
+        /// <summary>
+        /// Converts a UI DownloadFileItem to a Core DownloadFile
+        /// </summary>
+        public static DownloadFile ToDownloadFile(DownloadFileItem item)
+        {
+            return new DownloadFile
+            {
+                FilePath = item.FilePath,
+                FileName = item.FileName,
+                Extension = item.Extension,
+                SizeInBytes = item.SizeInBytes,
+                ModifiedDate = item.ModifiedDate,
+                Category = Enum.TryParse<FileCategory>(item.Category, out var category)
+                    ? category
+                    : FileCategory.All
             };
         }
     }

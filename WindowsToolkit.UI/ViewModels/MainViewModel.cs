@@ -16,6 +16,7 @@ namespace WindowsToolkit.UI.ViewModels
         {
             // Initialize commands
             NavigateToPackageManagerCommand = new RelayCommand(NavigateToPackageManager);
+            NavigateToDownloadsCleanupCommand = new RelayCommand(NavigateToDownloadsCleanup);
             NavigateToConfigSyncCommand = new RelayCommand(NavigateToConfigSync);
             NavigateToMediaConverterCommand = new RelayCommand(NavigateToMediaConverter);
             NavigateToVideoToolsCommand = new RelayCommand(NavigateToVideoTools);
@@ -46,6 +47,7 @@ namespace WindowsToolkit.UI.ViewModels
 
         // Navigation Commands
         public ICommand NavigateToPackageManagerCommand { get; }
+        public ICommand NavigateToDownloadsCleanupCommand { get; }
         public ICommand NavigateToConfigSyncCommand { get; }
         public ICommand NavigateToMediaConverterCommand { get; }
         public ICommand NavigateToVideoToolsCommand { get; }
@@ -58,6 +60,16 @@ namespace WindowsToolkit.UI.ViewModels
             var view = new PackageManagerView
             {
                 DataContext = new PackageManagerViewModel()
+            };
+            CurrentView = view;
+        }
+
+        private void NavigateToDownloadsCleanup()
+        {
+            CurrentPageTitle = "Downloads Cleanup";
+            var view = new DownloadsCleanupView
+            {
+                DataContext = new DownloadsCleanupViewModel()
             };
             CurrentView = view;
         }

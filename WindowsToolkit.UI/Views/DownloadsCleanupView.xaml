@@ -1,0 +1,221 @@
+<UserControl x:Class="WindowsToolkit.UI.Views.DownloadsCleanupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:WindowsToolkit.UI.Views"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="900">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Description -->
+        <TextBlock Grid.Row="0"
+                   Text="Clean up your Downloads folder by deleting or organizing files. Select filters and click Scan to find files."
+                   FontSize="13"
+                   Foreground="#7F8C8D"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,20"/>
+
+        <!-- Filter Panel -->
+        <Border Grid.Row="1"
+                Background="#F8F9FA"
+                BorderBrush="#E0E0E0"
+                BorderThickness="1"
+                CornerRadius="5"
+                Padding="15"
+                Margin="0,0,0,15">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- File Type Filters -->
+                <StackPanel Grid.Row="0" Orientation="Vertical">
+                    <TextBlock Text="File Types:" FontWeight="SemiBold" Margin="0,0,0,8" FontSize="13"/>
+                    <WrapPanel>
+                        <CheckBox Content="Installers (.exe, .msi)" IsChecked="{Binding FilterInstallers}" Margin="0,0,20,5"/>
+                        <CheckBox Content="Afbeeldingen" IsChecked="{Binding FilterImages}" Margin="0,0,20,5"/>
+                        <CheckBox Content="Documenten" IsChecked="{Binding FilterDocuments}" Margin="0,0,20,5"/>
+                        <CheckBox Content="Spreadsheets" IsChecked="{Binding FilterSpreadsheets}" Margin="0,0,20,5"/>
+                        <CheckBox Content="Video's" IsChecked="{Binding FilterVideos}" Margin="0,0,20,5"/>
+                        <CheckBox Content="Audio" IsChecked="{Binding FilterAudio}" Margin="0,0,20,5"/>
+                        <CheckBox Content="Archieven" IsChecked="{Binding FilterArchives}" Margin="0,0,20,5"/>
+                    </WrapPanel>
+                </StackPanel>
+
+                <!-- Age Filter -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                    <TextBlock Text="Age Filter:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,15,0" FontSize="13"/>
+                    <CheckBox Content="Files older than" IsChecked="{Binding UseAgeFilter}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox Text="{Binding MinimumAgeDays}" IsEnabled="{Binding UseAgeFilter}" Width="60" Padding="5" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock Text="days" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Operation Mode -->
+                <StackPanel Grid.Row="4" Orientation="Vertical">
+                    <TextBlock Text="Action:" FontWeight="SemiBold" Margin="0,0,0,8" FontSize="13"/>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Content="Delete (Move to Recycle Bin)" IsChecked="{Binding IsDeleteMode}" Margin="0,0,20,0"/>
+                        <RadioButton Content="Organize (Move to category folders)" IsChecked="{Binding IsOrganizeMode}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,15">
+            <Button Content="Scan Downloads"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding ScanFilesCommand}"
+                    Margin="0,0,10,0"/>
+            <Button Content="Preview"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding PreviewCleanupCommand}"
+                    Margin="0,0,10,0"/>
+            <Button Content="Execute Cleanup"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Command="{Binding ExecuteCleanupCommand}"
+                    Margin="0,0,20,0"/>
+            <Button Content="Select All"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding SelectAllCommand}"
+                    Margin="0,0,10,0"/>
+            <Button Content="Deselect All"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding DeselectAllCommand}"/>
+        </StackPanel>
+
+        <!-- File List -->
+        <Border Grid.Row="3"
+                Background="White"
+                BorderBrush="#E0E0E0"
+                BorderThickness="1"
+                CornerRadius="5">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Files}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#F0F0F0"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="15,10"
+                                    Background="Transparent">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#F8F9FA"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Checkbox -->
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsSelected}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,15,0"/>
+
+                                    <!-- File Info -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding FileName}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding FilePath}"
+                                                   FontSize="11"
+                                                   Foreground="#95A5A6"/>
+                                    </StackPanel>
+
+                                    <!-- Category -->
+                                    <Border Grid.Column="2"
+                                            Background="#E8F5E9"
+                                            CornerRadius="3"
+                                            Padding="8,4"
+                                            Margin="10,0"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Category}"
+                                                   FontSize="11"
+                                                   Foreground="#2E7D32"/>
+                                    </Border>
+
+                                    <!-- Size -->
+                                    <TextBlock Grid.Column="3"
+                                               Text="{Binding FormattedSize}"
+                                               FontSize="12"
+                                               Foreground="#7F8C8D"
+                                               VerticalAlignment="Center"
+                                               Margin="10,0"/>
+
+                                    <!-- Age -->
+                                    <TextBlock Grid.Column="4"
+                                               Text="{Binding FormattedAge}"
+                                               FontSize="12"
+                                               Foreground="#7F8C8D"
+                                               VerticalAlignment="Center"
+                                               Margin="10,0"
+                                               Width="100"
+                                               TextAlignment="Right"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="4"
+                Background="#F8F9FA"
+                BorderBrush="#E0E0E0"
+                BorderThickness="1,0,1,1"
+                CornerRadius="0,0,5,5"
+                Padding="15,10"
+                Margin="0,0,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status Message -->
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           Foreground="#7F8C8D"/>
+
+                <!-- Preview Info -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <TextBlock FontSize="12" Foreground="#34495E" FontWeight="SemiBold">
+                        <Run Text="{Binding PreviewFileCount, Mode=OneWay}"/>
+                        <Run Text="files selected"/>
+                    </TextBlock>
+                    <TextBlock Text=" • " FontSize="12" Foreground="#95A5A6" Margin="5,0"/>
+                    <TextBlock Text="{Binding PreviewTotalSize}"
+                               FontSize="12"
+                               Foreground="#34495E"
+                               FontWeight="SemiBold"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
