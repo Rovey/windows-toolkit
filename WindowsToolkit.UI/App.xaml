@@ -9,6 +9,8 @@
         <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <helpers:InverseBoolConverter x:Key="InverseBoolConverter"/>
         <helpers:InstallStatusColorConverter x:Key="InstallStatusColorConverter"/>
+        <helpers:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        <helpers:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
 
         <!-- Navigation Button Style -->
         <Style x:Key="NavigationButtonStyle" TargetType="Button">

@@ -1,0 +1,394 @@
+<UserControl x:Class="WindowsToolkit.UI.Views.VideoCutterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:WindowsToolkit.UI.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900"
+             Background="White">
+
+    <d:UserControl.DataContext>
+        <vm:VideoCutterViewModel/>
+    </d:UserControl.DataContext>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- FFmpeg Status -->
+        <Border Grid.Row="0" 
+                Background="{Binding FFmpegAvailable, Converter={StaticResource BoolToColorConverter}}"
+                CornerRadius="5" 
+                Padding="10" 
+                Margin="0,0,0,15">
+            <TextBlock Text="{Binding FFmpegStatus}" 
+                       Foreground="White" 
+                       FontSize="12"/>
+        </Border>
+
+        <!-- Folder Selection -->
+        <Grid Grid.Row="1" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0" 
+                     Text="{Binding CurrentFolder, Mode=TwoWay}" 
+                     VerticalContentAlignment="Center"
+                     Padding="10,8"
+                     FontSize="13"
+                     IsReadOnly="True"
+                     Background="#F8F9FA"
+                     BorderBrush="#DEE2E6"
+                     BorderThickness="1"/>
+
+            <Button Grid.Column="1" 
+                    Content="📁 Bladeren" 
+                    Command="{Binding BrowseFolderCommand}"
+                    Margin="10,0,0,0"
+                    Padding="15,8"
+                    Background="#6C757D"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand"/>
+
+            <Button Grid.Column="2" 
+                    Content="🔄 Vernieuwen" 
+                    Command="{Binding RefreshCommand}"
+                    Margin="10,0,0,0"
+                    Padding="15,8"
+                    Background="#17A2B8"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand"/>
+        </Grid>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="350"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Video List -->
+            <Border Grid.Column="0" 
+                    BorderBrush="#DEE2E6" 
+                    BorderThickness="1" 
+                    CornerRadius="5"
+                    Margin="0,0,15,0">
+                <Grid>
+                    <ListView ItemsSource="{Binding VideoFiles}"
+                              SelectedItem="{Binding SelectedVideo}"
+                              BorderThickness="0"
+                              Background="Transparent"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Bestandsnaam" Width="250">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding FileName}" 
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding FilePath}"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Duur" Width="80" 
+                                                DisplayMemberBinding="{Binding DurationFormatted}"/>
+                                <GridViewColumn Header="Grootte" Width="80" 
+                                                DisplayMemberBinding="{Binding FileSizeFormatted}"/>
+                                <GridViewColumn Header="Gewijzigd" Width="120" 
+                                                DisplayMemberBinding="{Binding ModifiedDateFormatted}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <!-- Loading Overlay -->
+                    <Border Background="#80FFFFFF" 
+                            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="Videos laden..." 
+                                       FontSize="14" 
+                                       Foreground="#6C757D"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Empty State -->
+                    <TextBlock Text="Geen videos gevonden in deze map"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="#6C757D"
+                               FontSize="14"
+                               Visibility="{Binding VideoFiles.Count, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                </Grid>
+            </Border>
+
+            <!-- Cut Settings Panel -->
+            <Border Grid.Column="1" 
+                    Background="#F8F9FA" 
+                    CornerRadius="5" 
+                    Padding="15">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <!-- Video Preview + Controls -->
+                        <StackPanel>
+                            <TextBlock Text="Video Preview" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <Border Background="Black" CornerRadius="5" Margin="0,0,0,8" Height="200">
+                                <MediaElement x:Name="VideoPreview"
+                                              Source="{Binding SelectedVideo.FilePath}"
+                                              LoadedBehavior="Manual"
+                                              UnloadedBehavior="Manual"
+                                              Stretch="Uniform"
+                                              Visibility="{Binding SelectedVideo, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            </Border>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,8">
+                                <Button Content="⏮" Width="32" Height="32" Margin="0,0,5,0" Command="{Binding GoToStartCommand}"/>
+                                <Button Content="▶ / ⏸" Width="48" Height="32" Margin="0,0,5,0" Command="{Binding PlayPauseCommand}"/>
+                                <Button Content="⏭" Width="32" Height="32" Margin="0,0,5,0" Command="{Binding GoToEndCommand}"/>
+                                <TextBlock Text="{Binding PreviewPositionFormatted}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            </StackPanel>
+                            <!-- Range slider voor start/eind selectie -->
+                            <Grid Margin="0,0,0,10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Slider x:Name="StartSlider"
+                                        Minimum="0"
+                                        Maximum="{Binding PreviewDurationSeconds}"
+                                        Value="{Binding StartSecondsSlider, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        IsEnabled="{Binding SelectedVideo, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        TickFrequency="1"
+                                        SmallChange="1"
+                                        LargeChange="5"
+                                        Margin="0,0,0,2"/>
+                                <Slider x:Name="EndSlider"
+                                        Minimum="0"
+                                        Maximum="{Binding PreviewDurationSeconds}"
+                                        Value="{Binding EndSecondsSlider, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        IsEnabled="{Binding SelectedVideo, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        TickFrequency="1"
+                                        SmallChange="1"
+                                        LargeChange="5"
+                                        Margin="0,0,0,0"
+                                        Background="#28A745"
+                                        Foreground="#28A745"/>
+                                <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,2,0,0">
+                                    <TextBlock Text="Start: " FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding StartSecondsSlider, StringFormat=F2}" Margin="2,0"/>
+                                    <TextBlock Text=" s   " />
+                                    <TextBlock Text="Eind: " FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding EndSecondsSlider, StringFormat=F2}" Margin="2,0"/>
+                                    <TextBlock Text=" s" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <TextBlock Text="Video Knippen" 
+                                   FontSize="16" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,15"/>
+
+                        <!-- Video Info -->
+                        <TextBlock Text="Video Informatie" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,5"/>
+                        <Border Background="White" 
+                                CornerRadius="3" 
+                                Padding="10" 
+                                Margin="0,0,0,15"
+                                BorderBrush="#DEE2E6"
+                                BorderThickness="1">
+                            <TextBlock Text="{Binding VideoInfo}" 
+                                       FontSize="12"
+                                       Foreground="#495057"
+                                       TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding VideoInfo}" Value="">
+                                                <Setter Property="Text" Value="Selecteer een video"/>
+                                                <Setter Property="FontStyle" Value="Italic"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+
+                        <!-- Start Time -->
+                        <TextBlock Text="Start Tijd" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,5"/>
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0" 
+                                     Text="{Binding StartHours, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextAlignment="Center"
+                                     Padding="5"
+                                     FontSize="14"/>
+                            <TextBlock Grid.Column="1" Text=":" 
+                                       VerticalAlignment="Center" 
+                                       Margin="5,0"
+                                       FontWeight="Bold"/>
+                            <TextBox Grid.Column="2" 
+                                     Text="{Binding StartMinutes, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextAlignment="Center"
+                                     Padding="5"
+                                     FontSize="14"/>
+                            <TextBlock Grid.Column="3" Text=":" 
+                                       VerticalAlignment="Center" 
+                                       Margin="5,0"
+                                       FontWeight="Bold"/>
+                            <TextBox Grid.Column="4" 
+                                     Text="{Binding StartSeconds, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextAlignment="Center"
+                                     Padding="5"
+                                     FontSize="14"/>
+                            <TextBlock Grid.Column="5" Text="." 
+                                       VerticalAlignment="Center" 
+                                       Margin="5,0"
+                                       FontWeight="Bold"/>
+                            <TextBox Grid.Column="6" 
+                                     Text="{Binding StartMilliseconds, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextAlignment="Center"
+                                     Padding="5"
+                                     FontSize="14"/>
+                        </Grid>
+
+                        <!-- End Time -->
+                        <TextBlock Text="Eind Tijd" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,5"/>
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0" 
+                                     Text="{Binding EndHours, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextAlignment="Center"
+                                     Padding="5"
+                                     FontSize="14"/>
+                            <TextBlock Grid.Column="1" Text=":" 
+                                       VerticalAlignment="Center" 
+                                       Margin="5,0"
+                                       FontWeight="Bold"/>
+                            <TextBox Grid.Column="2" 
+                                     Text="{Binding EndMinutes, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextAlignment="Center"
+                                     Padding="5"
+                                     FontSize="14"/>
+                            <TextBlock Grid.Column="3" Text=":" 
+                                       VerticalAlignment="Center" 
+                                       Margin="5,0"
+                                       FontWeight="Bold"/>
+                            <TextBox Grid.Column="4" 
+                                     Text="{Binding EndSeconds, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextAlignment="Center"
+                                     Padding="5"
+                                     FontSize="14"/>
+                            <TextBlock Grid.Column="5" Text="." 
+                                       VerticalAlignment="Center" 
+                                       Margin="5,0"
+                                       FontWeight="Bold"/>
+                            <TextBox Grid.Column="6" 
+                                     Text="{Binding EndMilliseconds, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextAlignment="Center"
+                                     Padding="5"
+                                     FontSize="14"/>
+                        </Grid>
+
+                        <!-- Time Labels -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" 
+                                       Text="UU : MM : SS . MS" 
+                                       FontSize="10" 
+                                       Foreground="#6C757D"
+                                       HorizontalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Cut Button -->
+                        <Button Content="✂️ Video Knippen" 
+                                Command="{Binding CutVideoCommand}"
+                                Padding="15,12"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Background="#28A745"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Margin="0,0,0,10">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Background" Value="#6C757D"/>
+                                            <Setter Property="Cursor" Value="Arrow"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <!-- Progress Bar -->
+                        <ProgressBar Value="{Binding CutProgress}" 
+                                     Minimum="0" 
+                                     Maximum="100" 
+                                     Height="20"
+                                     Margin="0,0,0,10"
+                                     Visibility="{Binding IsCutting, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                        <!-- Open Folder Button -->
+                        <Button Content="📂 Map Openen" 
+                                Command="{Binding OpenOutputFolderCommand}"
+                                Padding="10,8"
+                                Background="#6C757D"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Cursor="Hand"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="4" 
+                Background="#F8F9FA" 
+                Padding="15,10" 
+                CornerRadius="5"
+                Margin="0,15,0,0">
+            <TextBlock Text="{Binding StatusMessage}" 
+                       FontSize="12" 
+                       Foreground="#495057"/>
+        </Border>
+    </Grid>
+</UserControl>

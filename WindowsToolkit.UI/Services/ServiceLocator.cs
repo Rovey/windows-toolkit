@@ -1,6 +1,7 @@
 using WindowsToolkit.Core.Interfaces;
 using WindowsToolkit.Core.Services.PackageManager;
 using WindowsToolkit.Core.Services.DownloadsCleanup;
+using WindowsToolkit.Core.Services.VideoEditor;
 
 namespace WindowsToolkit.UI.Services
 {
@@ -14,12 +15,14 @@ namespace WindowsToolkit.UI.Services
 
         private readonly IPackageManagerService _packageManagerService;
         private readonly IDownloadsCleanupService _downloadsCleanupService;
+        private readonly IVideoCutterService _videoCutterService;
 
         private ServiceLocator()
         {
             // Initialize services
             _packageManagerService = new PackageManagerService();
             _downloadsCleanupService = new DownloadsCleanupService();
+            _videoCutterService = new VideoCutterService();
         }
 
         public static ServiceLocator Instance
@@ -42,6 +45,7 @@ namespace WindowsToolkit.UI.Services
 
         public IPackageManagerService PackageManagerService => _packageManagerService;
         public IDownloadsCleanupService DownloadsCleanupService => _downloadsCleanupService;
+        public IVideoCutterService VideoCutterService => _videoCutterService;
 
         /// <summary>
         /// For testing purposes - allows resetting the singleton

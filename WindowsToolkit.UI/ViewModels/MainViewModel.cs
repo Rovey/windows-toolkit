@@ -90,9 +90,12 @@ namespace WindowsToolkit.UI.ViewModels
 
         private void NavigateToVideoTools()
         {
-            CurrentPageTitle = "Video Tools";
-            // TODO: Implement VideoToolsViewModel
-            CurrentView = CreatePlaceholderView("Video Tools");
+            CurrentPageTitle = "Video Cutter";
+            var view = new VideoCutterView
+            {
+                DataContext = new VideoCutterViewModel()
+            };
+            CurrentView = view;
         }
 
         private void NavigateToUtilities()

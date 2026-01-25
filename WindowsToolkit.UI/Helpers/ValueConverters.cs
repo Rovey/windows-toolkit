@@ -76,4 +76,46 @@ namespace WindowsToolkit.UI.Helpers
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// Converts bool to color (green for true, red for false)
+    /// </summary>
+    public class BoolToColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolValue)
+            {
+                return boolValue
+                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#28A745"))
+                    : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DC3545"));
+            }
+            return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6C757D"));
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Converts zero count to Visibility (Visible when zero, Collapsed otherwise)
+    /// </summary>
+    public class ZeroToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int count)
+            {
+                return count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
