@@ -11,6 +11,7 @@
         <helpers:InstallStatusColorConverter x:Key="InstallStatusColorConverter"/>
         <helpers:BoolToColorConverter x:Key="BoolToColorConverter"/>
         <helpers:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+        <helpers:StringToBrushConverter x:Key="StringToBrushConverter"/>
 
         <!-- Navigation Button Style -->
         <Style x:Key="NavigationButtonStyle" TargetType="Button">

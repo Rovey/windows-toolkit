@@ -84,8 +84,11 @@ namespace WindowsToolkit.UI.ViewModels
         private void NavigateToMediaConverter()
         {
             CurrentPageTitle = "Media Converter";
-            // TODO: Implement MediaConverterViewModel
-            CurrentView = CreatePlaceholderView("Media Converter");
+            var view = new MediaConverterView
+            {
+                DataContext = new MediaConverterViewModel()
+            };
+            CurrentView = view;
         }
 
         private void NavigateToVideoTools()

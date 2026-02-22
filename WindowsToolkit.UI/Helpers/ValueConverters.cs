@@ -118,4 +118,26 @@ namespace WindowsToolkit.UI.Helpers
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// Converts a hex color string (e.g. "#28A745") to a SolidColorBrush
+    /// </summary>
+    public class StringToBrushConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string colorStr)
+            {
+                try
+                {
+                    return new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorStr));
+                }
+                catch { }
+            }
+            return new SolidColorBrush(Colors.Gray);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
 }
